@@ -1,22 +1,28 @@
-```ts
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { randomUUID } from "crypto";
 
-// Firebase Admin credentials must be configured in your hosting
-// provider's environment variables. Never commit them to GitHub.
+// Firebase Admin configuration
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-if (!serviceAccountJson) {
-  throw new Error(
-    "FIREBASE_SERVICE_ACCOUNT environment variable is missing."
-  );
+if (!admin.apps.length) {
+  if (serviceAccountJson) {
+    admin.initializeApp({
+      credential: admin.credential.cert(
+        JSON.parse(serviceAccountJson)
+      ),
+    });
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+    });
+  } else {
+    throw new Error(
+      "Configure FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS."
+    );
+  }
 }
-
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
-});
 
 const db = admin.firestore();
 const app = express();
@@ -55,7 +61,11 @@ type StaffRequest = Request & {
   };
 };
 
-function sendError(res: Response, status: number, message: string) {
+function sendError(
+  res: Response,
+  status: number,
+  message: string
+) {
   return res.status(status).json({ error: message });
 }
 
@@ -98,7 +108,7 @@ function staffPatient(
   };
 }
 
-// Authenticate healthcare staff using Firebase Authentication.
+// Authenticate active healthcare staff.
 async function requireStaff(
   req: StaffRequest,
   res: Response,
@@ -146,8 +156,8 @@ async function requireStaff(
     };
 
     return next();
-  } catch (err) {
-    console.error("Staff authentication failed:", err);
+  } catch (error) {
+    console.error("Staff authentication failed:", error);
 
     return sendError(
       res,
@@ -165,7 +175,7 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// Get available departments
+// Available departments
 app.get("/departments", (_req, res) => {
   return res.json({ departments: DEPARTMENTS });
 });
@@ -211,10 +221,7 @@ app.post("/patients/register", async (req, res) => {
 
     const token =
       "SC-" +
-      randomUUID()
-        .replace(/-/g, "")
-        .slice(0, 8)
-        .toUpperCase();
+      randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase();
 
     const now = new Date().toISOString();
 
@@ -242,8 +249,8 @@ app.post("/patients/register", async (req, res) => {
       department: body.department,
       registeredAt: now,
     });
-  } catch (err) {
-    console.error("Patient registration failed:", err);
+  } catch (error) {
+    console.error("Patient registration failed:", error);
 
     return sendError(
       res,
@@ -253,7 +260,7 @@ app.post("/patients/register", async (req, res) => {
   }
 });
 
-// Check patient token status
+// Check a patient's token
 app.get("/patients/status/:token", async (req, res) => {
   try {
     const snap = await db
@@ -267,8 +274,8 @@ app.get("/patients/status/:token", async (req, res) => {
     }
 
     return res.json(publicPatient(snap.docs[0]));
-  } catch (err) {
-    console.error("Status lookup failed:", err);
+  } catch (error) {
+    console.error("Status lookup failed:", error);
 
     return sendError(
       res,
@@ -311,8 +318,8 @@ app.get("/queue/public", async (_req, res) => {
       updatedAt: new Date().toISOString(),
       entries,
     });
-  } catch (err) {
-    console.error("Public queue failed:", err);
+  } catch (error) {
+    console.error("Public queue failed:", error);
 
     return sendError(
       res,
@@ -322,7 +329,7 @@ app.get("/queue/public", async (_req, res) => {
   }
 });
 
-// Get staff patient queue
+// Staff patient queue
 app.get(
   "/staff/patients",
   requireStaff,
@@ -337,23 +344,12 @@ app.get(
       const patients = snap.docs
         .map(staffPatient)
         .sort((a, b) => {
-          const openA = ![
-            "completed",
-            "cancelled",
-          ].includes(a.status)
-            ? 0
-            : 1;
-
-          const openB = ![
-            "completed",
-            "cancelled",
-          ].includes(b.status)
-            ? 0
-            : 1;
+          const closedStatuses = ["completed", "cancelled"];
+          const openA = closedStatuses.includes(a.status) ? 1 : 0;
+          const openB = closedStatuses.includes(b.status) ? 1 : 0;
 
           const rankA =
             PRIORITY_RANK[a.triage?.priority || ""] ?? 4;
-
           const rankB =
             PRIORITY_RANK[b.triage?.priority || ""] ?? 4;
 
@@ -367,8 +363,8 @@ app.get(
         });
 
       return res.json({ patients });
-    } catch (err) {
-      console.error("Staff queue failed:", err);
+    } catch (error) {
+      console.error("Staff queue failed:", error);
 
       return sendError(
         res,
@@ -379,7 +375,7 @@ app.get(
   }
 );
 
-// Get one patient's details (staff only)
+// Get one patient (staff only)
 app.get(
   "/staff/patients/:id",
   requireStaff,
@@ -395,8 +391,8 @@ app.get(
       }
 
       return res.json(staffPatient(doc));
-    } catch (err) {
-      console.error("Patient details failed:", err);
+    } catch (error) {
+      console.error("Patient details failed:", error);
 
       return sendError(
         res,
@@ -407,7 +403,7 @@ app.get(
   }
 );
 
-// Update triage assessment (authorised staff only)
+// Update triage (authorised staff only)
 app.patch(
   "/staff/patients/:id/triage",
   requireStaff,
@@ -424,8 +420,13 @@ app.patch(
     ];
 
     if (
-      !Object.keys(PRIORITY_RANK).includes(body.priority) ||
+      !Object.prototype.hasOwnProperty.call(
+        PRIORITY_RANK,
+        body.priority
+      ) ||
       !statuses.includes(body.status) ||
+      (body.notes !== undefined &&
+        typeof body.notes !== "string") ||
       (typeof body.notes === "string" &&
         body.notes.length > 2000)
     ) {
@@ -449,10 +450,7 @@ app.patch(
     }
 
     try {
-      const ref = db
-        .collection("patients")
-        .doc(req.params.id);
-
+      const ref = db.collection("patients").doc(req.params.id);
       const doc = await ref.get();
 
       if (!doc.exists) {
@@ -477,8 +475,8 @@ app.patch(
       const updatedDoc = await ref.get();
 
       return res.json(staffPatient(updatedDoc));
-    } catch (err) {
-      console.error("Triage update failed:", err);
+    } catch (error) {
+      console.error("Triage update failed:", error);
 
       return sendError(
         res,
@@ -494,10 +492,9 @@ app.use((_req, res) => {
   return sendError(res, 404, "API route not found.");
 });
 
-// Start as a regular web server (Render-compatible)
+// Start the server
 const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`SmartCare API listening on port ${PORT}`);
 });
-```

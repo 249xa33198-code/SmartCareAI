@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SmartCare AI: Smarter Queues. Faster Care." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <title>SmartCare AI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="flex min-h-dvh flex-col">
+    <a href="#app" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-3">Skip to content</a>
+    <header class="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <a href="#/" class="flex items-center gap-2.5 font-display text-xl font-bold">
+          <svg viewBox="0 0 32 32" class="size-8" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0D5F63"/><path d="M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z" fill="#F3F7F6"/></svg>
+          SmartCare <span class="text-teal">AI</span>
+        </a>
+        <nav aria-label="Main" class="hidden gap-1 sm:flex">
+          <a data-nav href="#/register" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Register</a>
+          <a data-nav href="#/queue" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Live queue</a>
+          <a data-nav href="#/staff" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Staff</a>
+        </nav>
+        <button id="menu-btn" class="rounded-lg border border-line px-3 py-2 font-medium sm:hidden" aria-expanded="false" aria-controls="mobile-nav">Menu</button>
+      </div>
+      <nav id="mobile-nav" aria-label="Main" class="hidden flex-col gap-1 border-t border-line px-4 py-3 sm:hidden">
+        <a data-nav href="#/register" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Register</a>
+        <a data-nav href="#/queue" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Live queue</a>
+        <a data-nav href="#/staff" class="rounded-lg px-3 py-2 font-medium hover:bg-teal-wash">Staff</a>
+      </nav>
+    </header>
+
+    <main id="app" tabindex="-1" class="flex-1 focus:outline-none">
+      <noscript><p class="p-8">SmartCare AI needs JavaScript turned on to work.</p></noscript>
+    </main>
+
+    <footer class="border-t border-line bg-white">
+      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between">
+        <p>SmartCare AI. Smarter Queues. Faster Care.</p>
+        <p>The public queue shows tokens only. It never shows names or medical details.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Plain scripts, no build step, no modules, so this works when opened straight from disk. -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      var c = window.SMARTCARE_FIREBASE_CONFIG || {};
+      if (window.firebase && c.apiKey && c.projectId &&
+          c.apiKey.indexOf("REPLACE_WITH") !== 0 && c.projectId.indexOf("REPLACE_WITH") !== 0) {
+        firebase.initializeApp(c);
+        window.firebaseAuth = firebase.auth();
+      } else {
+        console.warn("SmartCare AI: add your Firebase web app configuration in frontend/config.js.");
+      }
+    })();
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.firebase/
+.DS_Store
+serviceAccountKey.json
+*service-account*.json
+*serviceAccount*.json
+functions/.env
+functions/.env.*
+!functions/.env.example
+functions/lib/

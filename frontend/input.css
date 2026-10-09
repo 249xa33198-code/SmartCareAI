@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@source "./index.html";
+@source "./app.js";
+
+@font-face { font-family: "Bricolage Grotesque"; src: url("fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Instrument Sans"; src: url("fonts/instrument-sans-latin-wght-normal.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: #f3f7f6;
+  --color-ink: #10252a;
+  --color-muted: #4d6469;
+  --color-line: #d5e2e0;
+  --color-teal: #0d5f63;
+  --color-teal-deep: #08454a;
+  --color-teal-wash: #e3f1f0;
+  --color-critical: #b8322f;
+  --color-urgent: #c77700;
+  --color-standard: #2563a8;
+  --color-routine: #5b6b70;
+}
+
+html { scroll-padding-top: 5rem; }
+body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.015em; text-wrap: balance; }
+:focus-visible { outline: 3px solid #1d8f95; outline-offset: 2px; border-radius: 4px; }
+.tabular { font-variant-numeric: tabular-nums; }
+a[data-nav].active { background: var(--color-teal-wash); color: var(--color-teal-deep); }
+
+.ticket {
+  position: relative; background: var(--color-teal-deep); color: #f3f7f6; border-radius: 1.25rem;
+  -webkit-mask: radial-gradient(circle 0.8rem at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 0.8rem at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 0.8rem at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat, radial-gradient(circle 0.8rem at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+.ticket-perf { border-top: 2px dashed rgb(243 247 246 / 0.35); }
+@keyframes ticket-in { from { transform: translateY(-14px) rotate(-2deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.ticket-in { animation: ticket-in 0.6s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .ticket-in, .animate-spin, .animate-pulse { animation: none !important; } }
+@media print { header, footer, .no-print { display: none !important; } }

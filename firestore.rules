@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All app access goes through Cloud Functions, which validates staff identity.
+    // Admin SDK calls from Cloud Functions bypass these rules.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

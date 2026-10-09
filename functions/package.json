@@ -1,4 +1,3 @@
-```json
 {
   "name": "smartcare-ai-functions",
   "private": true,
@@ -22,4 +21,3 @@
     "typescript": "^5.7.2"
   }
 }
-```

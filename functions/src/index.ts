@@ -1,9 +1,17 @@
 import * as admin from "firebase-admin";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { onRequest } from "firebase-functions/v2/https";
+import { randomUUID } from "crypto";
 
-admin.initializeApp();
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+if (!serviceAccountJson) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is missing");
+}
+
+admin.initializeApp({
+  credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+});
 const db = admin.firestore();
 const app = express();
 app.use(cors({ origin: true }));
